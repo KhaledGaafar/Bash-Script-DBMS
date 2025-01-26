@@ -1,0 +1,980 @@
+#!/usr/bin/bash
+shopt -s extglob
+
+
+#-------------main Menu ----------------------------                                 
+Mainmenu() {
+   #echo  -e "\n+------------MainMenu------------+"
+   #echo "| 1. connectDB                  |"
+   #echo "| 2. createDB                   |"
+   #echo "| 3. ListDB                     |"
+   #echo "| 4. dropDB                     |"
+   
+  # read -p "please select the choice " choice
+   choice=$(zenity --entry --title="please select the choice number" --text="1.connectDB
+2.createDB
+3.ListDB
+4.dropDB
+5.exist")
+if [[ $? -ne 0 ]]; then
+        zenity --info --text="Operation cancelled. Returning to Main Menu."
+        return
+    fi
+   
+   case $choice in
+         1) 
+           connectDB 
+           ;;
+         2)
+           createDB
+           ;;
+         3)
+           listDB
+           ;;
+         4)
+           dropDB
+           ;;
+          5) exit
+            ;;
+          *) zenity --error --text="this wrong choice please try again";
+             Mainmenu
+             ;;
+          
+   esac
+             
+ }
+ 
+ 
+#-----------------cnnect database ---------------------------                                     
+connectDB() {
+   #read -p "please enter name of DB " nameDB
+   nameDB=$(zenity --entry --title="name DB" --text="please enter name of DB")
+   if [[ $? -ne 0 ]]; then
+        zenity --info --text="Operation cancelled. Returning to Main Menu."
+        Mainmenu
+        return
+    fi
+   
+    if [[ -z "$nameDB" ]]; then
+        zenity --error --text="No database name entered. Please try again."
+        Mainmenu
+   fi
+    
+   cd ~/disk/$nameDB 2>>./.error.log
+   
+   if [[ $? -eq 0 ]]
+   then
+       #echo "connected----"
+       zenity --info --text="connected"
+       menuTable
+   else
+      # echo "there is not such a database "
+       zenity --error --text="there is no database name"
+       Mainmenu
+   fi
+}
+
+#------------------create database -----------------------------                                     
+createDB (){
+#read -p "enter the name of your dabase name: " dbname
+dbname=$(zenity --entry --title="name DB" --text="please enter name of DB")
+if [[ $? -ne 0 ]]; then
+        zenity --info --text="Operation cancelled. Returning to Main Menu."
+        Mainmenu
+        return
+    fi
+    if [[ $dbname == "" ]]
+    then
+    #echo "your database name can not be empty, please try again"
+    zenity --error --text="your database name can not be empty, please try again"
+    Mainmenu
+    elif [[ -e ~/disk/$dbname ]]
+    then
+    #echo "this database already exists! please try a different name"
+    zenity --error --text="this database already exists! please try a different name"
+    Mainmenu
+    
+    elif [[ "$dbname" =~ ^[0-9] ]] || [[ "$dbname" =~ ^[0-9]+$ ]]; then
+        zenity --error --text="Database name cannot be entirely digits or start with a digit. Please try again."
+        Mainmenu
+    
+    elif [[ "$dbname" =~ \  ]]; then
+        zenity --error --text="Database name cannot contain spaces. Please try again."
+        Mainmenu
+    
+    elif [[ "$dbname" =~ ^[-_] ]] || ! [[ "$dbname" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+        zenity --error --text="Database name can only contain letters, digits, '-', or '_', and must not start with '-' or '_'. Please try again."
+        Mainmenu
+      
+    else
+        mkdir ~/disk/$dbname; #echo "yourdatbase was created succefully"
+        zenity --info --text="yourdatbase was created succefully"
+        Mainmenu
+    fi
+}
+
+#--------------------list databases------------------------------------                                    
+listDB (){
+    databases=$(ls ~/disk)
+     zenity --info --text="The databases:\n$databases"
+     Mainmenu
+}
+
+
+#---------------------drop databases-------------------------------------                                   
+function dropDB {
+   # read -p "please enter name of droppedDb " nameDB
+   nameDB=$(zenity --entry --title="name DB" --text="please enter name of DB")
+   if [[ $? -ne 0 ]]; then
+        zenity --info --text="Operation cancelled. Returning to Main Menu."
+        Mainmenu
+        return
+    fi
+     if [[ -z "$nameDB" ]]; then
+        zenity --error --text="No database name entered. Please try again."
+        Mainmenu
+   fi
+    rm -r ./disk/$nameDB 2>>./.error.log
+    
+    if [[ $? == 0 ]]
+   then
+       #echo "database dropped"
+       zenity --info --text="database dropped"
+   else
+       #echo "there is not such a database "
+       zenity --info --text="there is not such data base"
+   fi
+   Mainmenu
+}
+
+#---------------------menu table-----------------------------------------------
+function menuTable {
+  # echo  -e "\n+------------Maintable------------+"
+  # echo "| 1. create Table                 |"
+  # echo "| 2. List Table                   |"
+  # echo "| 3. Drop Table                   |"
+   #echo "| 4. insert Into Table            |"
+   #echo "| 5. select from Table            |"
+   #echo "| 6. delete from Table            |"
+   #echo "| 7. update Table                 |"
+   
+   #read -p "please select choice" choise
+   choise=$(zenity --entry --title="Menu-table" --text="1.craete table
+2.List Table
+3.Drop Table
+4.insert into table
+5.select 
+6.delete from table
+7.update table
+8.Exist this menu
+9.Exist ")
+if [[ $? -ne 0 ]]; then
+        zenity --info --text="Operation cancelled. Returning to Main Menu."
+        Mainmenu
+        return
+    fi
+   case $choise in 
+           1)
+             createTable
+             ;;
+             
+           2)
+             listTable
+             ;;
+           3)
+             dropTable
+             ;;
+           4)
+             insertTable
+             ;;
+           5)
+             selectMenu
+             ;;
+           6)
+             deleteTable
+             ;;
+           7)
+             update
+             ;;
+           8)
+              Mainmenu
+             ;;
+           9)
+             exit
+             ;;
+          *) zenity --error --text="this wrong choice please try again";
+             menuTable
+             ;;
+   esac
+}
+   
+#--------------------------------craete table ------------------------
+createTable() {
+  tableName=$(zenity --entry --title="name table" --text="please enter name of table")
+  if [[ $? -ne 0 ]]; then
+    zenity --info --text="Operation cancelled. Returning to Main Menu."
+    Mainmenu
+    return
+  fi
+
+  if [[ $tableName == "" ]]; then
+    zenity --error --text="your table name name can not be empty, please try again"
+    menuTable
+  elif [[ -e $tableName ]]; then
+    zenity --error --text="this table already exists! please try a different name"
+    menuTable
+  elif [[ "$tableName" =~ ^[0-9] ]] || [[ "$tableName" =~ ^[0-9]+$ ]]; then
+    zenity --error --text="table name cannot be entirely digits or start with a digit. Please try again."
+    menuTable
+  elif [[ "$tableName" =~ \  ]]; then
+    zenity --error --text="table name cannot contain spaces. Please try again."
+    menuTable
+  elif [[ "$tableName" =~ ^[-_] ]] || ! [[ "$tableName" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+    zenity --error --text="Database name can only contain letters, digits, '-', or '_', and must not start with '-' or '_'. Please try again."
+    menuTable
+  fi
+
+  colsNum=$(zenity --entry --title="num of col table" --text="please enter number of cols")
+  if [[ $? -ne 0 ]]; then
+    zenity --info --text="Operation cancelled. Returning to Main Menu."
+    menuTable
+    return
+  fi
+
+  if [[ -z "$colsNum" ]]; then
+    zenity --error --text="No column number entered. Please try again."
+    createTable
+  fi
+
+  if ! [[ "$colsNum" =~ ^([1-9]|10)$ ]]; then
+    zenity --error --text="Invalid column number. Please enter a positive integer between 1 and 10."
+    createTable
+  fi
+
+  counter=1
+  sep="|"
+  fSep="\n"
+  pKey=""
+  metaData="Field"$sep"Type"$sep"len"$sep"key"
+  pKeySet=false
+  declare -a colNames=()
+
+  while [ $counter -le $colsNum ]; do
+    colName=$(zenity --entry --title="Name Table" --text="Please enter name of column $counter")
+    if [[ $? -ne 0 ]]; then
+      zenity --info --text="Operation cancelled. Returning to Main Menu."
+      menuTable
+      return
+    fi
+
+    if [[ " ${colNames[@]} " =~ " ${colName} " ]]; then
+      zenity --error --text="Column name '$colName' already exists. Please enter a different name."
+      continue
+    fi
+
+    colNames+=("$colName")
+
+    colType=$(zenity --list --title="Column Type" --text="Select the type of column $colName" --radiolist --column="Select" --column="Type" TRUE "int" FALSE "str")
+    if [[ $? -ne 0 ]]; then
+      zenity --info --text="Operation cancelled. Returning to Main Menu."
+      menuTable
+      return
+    fi
+
+    if [[ -z "$colType" ]]; then
+      zenity --error --text="No column type selected. Exiting."
+      menuTable
+      exit 1
+    fi
+
+      colMax=$(zenity --entry --title="data max length" --text="please enter a number from 2 to 225")
+      if [[ $colMax =~ ^[0-9]+$ ]]; then
+        if [[ $colMax -le 0 || $colMax -ge 255 ]]
+          then 
+          zenity --info --text="your length is not accepted"
+          menuTable
+          return
+        fi
+        else 
+        zenity --info --text="you didn't enter a valid number"
+        menuTable
+        return
+      fi
+
+    if [[ "$pKeySet" == false ]]; then
+      if zenity --question --title="Primary Key" --text="Make $colName a Primary Key?"; then
+        pKey="PK"
+        pKeySet=true
+        metaData+=$fSep$colName$sep$colType$sep$colMax$sep$pKey
+      else
+        pKey=""
+        metaData+=$fSep$colName$sep$colType$sep$colMax$sep""
+      fi
+    else
+      pKey=""
+      metaData+=$fSep$colName$sep$colType$sep$colMax$sep""
+    fi
+
+    zenity --info --title="Metadata" --text="Column: $colName\nType: $colType\nPrimary Key: $pKey"
+
+    echo "Collected Metadata: $metaData"
+
+    zenity --info --text="Setup complete."
+
+    if [[ $counter == $colsNum ]]; then
+      temp=$temp$colName
+    else
+      temp=$temp$colName$sep
+    fi
+    ((counter++))
+  done
+
+  touch .$tableName
+  echo -e $metaData >> .$tableName
+  touch $tableName
+  echo -e $temp >> $tableName
+  temp=""
+
+  if [[ $? == 0 ]]; then
+    zenity --info --text="Table Created successfully"
+    menuTable
+  else
+    zenity --info --text="Error Creating Table $tableName"
+    menuTable
+  fi
+}
+#------------------------list tables-----------------
+listTable() {
+   tables=$(ls )
+     zenity --info --text="The databases:\n$tables"
+     menuTable
+}
+#-----------------------drop table--------------------------
+
+dropTable() {
+  #read -p "Please enter the table you want to drop: " tName
+  
+  tName=$(zenity --entry --title="table drop" --text="please enter name of tble you ant dropp")
+  if [[ $? -ne 0 ]]; then
+        zenity --info --text="Operation cancelled. Returning to Main Menu."
+         menuTable
+        return
+    fi
+  if [[ -e $tName ]]
+  then
+    rm $tName .$tName 2>>./.error.log
+    if [[ $? == 0 ]]
+    then
+      #echo "Table dropped successfully"
+      zenity --info --text="Table dropped successfully"
+      menuTable
+    else
+      #echo "Error dropping table $tName"
+      zenity --info --text="Erorr droping table $tName"
+      menuTable
+    fi
+  else
+    #echo "This table does not exist"
+    zenity --info --text="This table does not exist"
+  fi
+  menuTable
+}
+
+#-------------------insert into table---------------
+#-------------------insert into table---------------
+insertTable() {
+  Tname=$(zenity --entry --title="name table" --text="please enter name of table")
+  if [[ $? -ne 0 ]]; then
+        zenity --info --text="Operation cancelled. Returning to Main Menu."
+         menuTable
+        return
+    fi
+  
+  # Null validation
+  if [[ -z $Tname ]]; then
+    zenity --info --text="You entered an empty name! Please try again."
+    insertTable
+    return
+  fi
+
+  declare -i test=0 # For not adding any data if one or more is not valid
+
+  if [[ -e $Tname ]]; then
+    IFS='|' read -a rowsArr < ./$Tname
+    declare -i c=0 # For counting each column type in metadata file
+    gdata="" # Initialize gdata to store the row being inserted
+
+    for loo in "${rowsArr[@]}"; do
+      Ndata=$(zenity --entry --title="name table" --text="enter the data of $loo")
+      c+=1
+      typetest=$(cut -d\| -f2 ./.$Tname | head -$(($c+1)) | tail -1) # Check type
+      pktest=$(cut -d\| -f4 ./.$Tname | head -$(($c+1)) | tail -1) # Check primary key
+      maxLentest=$(cut -d\| -f3 ./.$Tname | head -$(($c+1)) | tail -1) # Check the length
+
+      if [[ $typetest == "str" ]]; then
+        if [[ -z $Ndata ]]; then
+          gdata+="NULL|" # Adds NULL if the user didn't type any data
+        elif [[ $Ndata =~ [a-zA-Z] && ${#Ndata} -ge 1 && ${#Ndata} -le $maxLentest ]]; then
+          gdata+=$Ndata"|"
+          test+=0
+
+          # Check for primary key duplication
+          if [[ $pktest == "PK" ]]; then
+            if awk -F'|' -v col=$c 'NR > 1 {print $col}' ./$Tname | grep -q "^$Ndata$"; then
+              zenity --info --text="Invalid input for Primary Key: Duplicate value!"
+              test+=1
+              menuTable
+              break
+            fi
+          fi
+        else
+          zenity --info --text="This field is supposed to take strings, with no NULL for PK."
+          test+=1
+          menuTable
+          break
+        fi
+
+      elif [[ $typetest == "int" ]]; then
+        if [[ $Ndata =~ ^[0-9]+$ && ${#Ndata} -ge 1 && ${#Ndata} -le $maxLentest ]]; then
+          gdata+=$Ndata"|"
+          test+=0
+
+          # Check for primary key duplication
+          if [[ $pktest == "PK" ]]; then
+            if awk -F'|' -v col=$c 'NR > 1 {print $col}' ./$Tname | grep -q "^$Ndata$"; then
+              zenity --info --text="Invalid input for Primary Key: Duplicate value!"
+              test+=1
+              menuTable
+              break
+            fi
+          fi
+        else
+          zenity --info --text="This field is supposed to take numbers only, with no NULL for PK."
+          test+=1
+          menuTable
+          break
+        fi
+      fi
+    done
+
+    # If all data is valid, append the row to the table
+    if [[ $test == 0 ]]; then
+      echo ${gdata::-1} >> ./$Tname
+      zenity --info --text="Data inserted successfully!"
+      menuTable
+    fi
+
+    gdata="" # Empty the variable for the next insertion
+  else
+    zenity --info --text="There is no such table! Please try again."
+    menuTable
+  fi
+}
+#-----------------Delete from table----------------------
+deleteTable(){
+      chose=$(zenity --entry --title="please chose option number" --text="1.delete all data
+2.delete  under condition 
+3.return to previous Menu
+4.Exit")
+if [[ $? -ne 0 ]]; then
+        zenity --info --text="Operation cancelled. Returning to Main Menu."
+         menuTable
+        return
+    fi
+    case $chose in
+           1)
+             deleteAllData
+             ;;
+           2)
+             deletefromTable
+             ;;  
+           3)
+             menuTable
+             ;;
+           4)
+             exit
+             ;;
+           *)
+              zenity --error --text="this wrong choice please try again";
+              selectMenu
+             ;;
+     esac   
+             
+    
+}
+
+
+deleteAllData() {
+  
+  tName=$(zenity --entry --title="Delete All Data" --text="Enter the table name to delete all data from")
+  if [[ $? -ne 0 ]]; then
+    zenity --info --text="Operation cancelled. Returning to Main Menu."
+    menuTable
+    return
+  fi
+
+  if [[ -e $tName ]]; then
+    
+    zenity --question --title="Confirm Deletion" --text="Are you sure you want to delete all data in the table '$tName'? This cannot be undone." --ok-label="Yes" --cancel-label="No"
+    if [[ $? -ne 0 ]]; then
+      zenity --info --text="Operation cancelled. No data was deleted."
+      menuTable
+      return
+    fi
+
+    sed -i '2,$d' "$tName" 2>> ./.error.log
+
+    # Check if the operation was successful
+    if [[ $? -eq 0 ]]; then
+      zenity --info --text="All data in the table '$tName' has been deleted successfully."
+    else
+      zenity --info --text="An error occurred while deleting data."
+    fi
+  else
+    zenity --info --text="The table '$tName' does not exist."
+  fi
+
+  # Return to the main menu
+  menuTable
+}
+deletefromTable() {
+  tName=$(zenity --entry --title="table name" --text="please enter name of table")
+  if [[ $? -ne 0 ]]; then
+    zenity --info --text="Operation cancelled. Returning to Main Menu."
+    menuTable
+    return
+  fi
+
+  if [[ -e $tName ]]; then
+    field=$(zenity --entry --title="condition" --text="please enter column name to delete rows based on")
+    if [[ $? -ne 0 ]]; then
+      zenity --info --text="Operation cancelled. Returning to Main Menu."
+      menuTable
+      return
+    fi
+
+    # Find and check if the field name exists in the table
+    fid=$(awk '
+      BEGIN {
+        FS= "|"
+      }
+      {
+        if (NR == 1) {
+          for (i=1; i<=NF; i++) {
+            if ($i == "'"$field"'") {
+              print i
+            }
+          }
+        }
+      }
+    ' $tName)
+
+    if [[ $fid == "" ]]; then
+      zenity --info --text="Column not found"
+      menuTable
+    else
+      value=$(zenity --entry --title="condition" --text="enter value to delete rows")
+      if [[ $? -ne 0 ]]; then
+        zenity --info --text="Operation cancelled. Returning to Main Menu."
+        menuTable
+        return
+      fi
+
+      # Check if the value exists in the column
+      result=$(awk '
+        BEGIN {
+          FS= "|"
+        }
+        {
+          if ($'$fid' == "'"$value"'") {
+            print $0
+          }
+        }
+      ' $tName 2>> ./.error.log)
+
+      if [[ $result == "" ]]; then
+        zenity --info --text="The value not found"
+        menuTable
+      else
+        # Delete all rows where the condition is met
+        awk -v fid=$fid -v value="$value" '
+          BEGIN {
+            FS= "|"
+          }
+          {
+            if ($fid != value) {
+              print $0
+            }
+          }
+        ' $tName > temp && mv temp $tName
+
+        zenity --info --text="All matching rows deleted successfully"
+        menuTable
+      fi
+    fi
+  else
+    zenity --info --text="This table name not found"
+    menuTable
+  fi
+}
+
+#------------update table-----------
+update() {
+  tName=$(zenity --entry --title="table" --text="Enter table name")
+  if [[ $? -ne 0 ]]; then
+    zenity --info --text="Operation cancelled. Returning to Main Menu."
+    menuTable
+    return
+  fi
+
+  if [[ -e $tName ]]; then
+    field=$(zenity --entry --title="condition" --text="Enter Condition Column name")
+    fid=$(awk '
+      BEGIN{
+        FS="|"
+      }
+      {
+        if(NR==1){
+          for(i=1;i<=NF;i++){
+            if($i=="'$field'") print i
+          }
+        }
+      }
+    ' $tName)
+
+    if [[ $fid == "" ]]; then
+      zenity --info --text="Column not found"
+      menuTable
+    else
+      val=$(zenity --entry --title="condition" --text="Enter Condition Column value")
+      if [[ $? -ne 0 ]]; then
+        zenity --info --text="Operation cancelled. Returning to Main Menu."
+        menuTable
+        return
+      fi
+
+      result=$(awk '
+        BEGIN{
+          FS="|"
+        }
+        {
+          if ($'$fid'=="'$val'") print $0
+        }
+      ' $tName 2>>./.error.log)
+
+      if [[ $result == "" ]]; then
+        zenity --info --text="Value not found"
+        menuTable
+      else
+        setfield=$(zenity --entry --title="Update" --text="Enter field name to set")
+        setFid=$(awk '
+          BEGIN{
+            FS="|"
+          }
+          {
+            if(NR==1){
+              for(i=1;i<=NF;i++){
+                if($i=="'$setfield'") print i
+              }
+            }
+          }
+        ' $tName)
+
+        if [[ $setFid == "" ]]; then
+          zenity --info --text="Field not found"
+          menuTable
+        else
+          # Check if the setfield is a primary key by reading metadata
+          isPK=$(awk -v setfield="$setfield" '
+            BEGIN{
+              FS="|"
+            }
+            {
+              if ($1 == setfield && $3 == "PK") {
+                print "PK"
+              }
+            }
+          ' ".$tName")
+
+          if [[ "$isPK" == "PK" ]]; then
+            zenity --info --text="The primary key column cannot be updated"
+            update
+            return
+          fi
+
+          newvalue=$(zenity --entry --title="Update" --text="Enter new value")
+          if [[ $? -ne 0 ]]; then
+            zenity --info --text="Operation cancelled. Returning to Main Menu."
+            menuTable
+            return
+          fi
+
+          determine_type() {
+            local value="$1"
+            if [[ "$value" =~ ^[0-9]+$ ]]; then
+              echo "integer"
+            elif [[ "$value" =~ ^[0-9]*\.[0-9]+$ ]]; then
+              echo "float"
+             elif [[ "$value" -le 0 ]]; then
+              echo "negative"
+            else
+              echo "string"
+            fi
+          }
+
+          type_oldValue=$(determine_type "$(awk -v fid=$setFid 'BEGIN{FS="|"} NR==2 {print $fid}' $tName)")
+          type_newvalue=$(determine_type "$newvalue")
+
+          if [[ "$type_oldValue" != "$type_newvalue" ]]; then
+            zenity --info --text="The data type of the new value doesn't match"
+            update
+            return
+          fi
+
+          # Update all matching rows
+          awk -v fid=$fid -v val="$val" -v setFid=$setFid -v newvalue="$newvalue" '
+            BEGIN{
+              FS="|"
+              OFS="|"
+            }
+            {
+              if ($fid == val) {
+                $setFid = newvalue
+              }
+              print $0
+            }
+          ' $tName > temp && mv temp $tName
+
+          zenity --info --text="Rows Updated Successfully"
+          menuTable
+        fi
+      fi
+    fi
+  else
+    zenity --info --text="This table does not exist"
+    menuTable
+  fi
+}
+selectMenu(){
+      chose=$(zenity --entry --title="please chose option number" --text="1.select all table
+2.select col
+3.select under condition 
+4.return to previous Menu
+5.Exit")
+if [[ $? -ne 0 ]]; then
+        zenity --info --text="Operation cancelled. Returning to Main Menu."
+         menuTable
+        return
+    fi
+    case $chose in
+           1)
+             selectAll
+             ;;
+           2)
+             selectCol
+             ;;
+           3)
+             selectWithCondition
+             ;;   
+           4)
+             menuTable
+             ;;
+           5)
+             exit
+             ;;
+           *)
+              zenity --error --text="this wrong choice please try again";
+              selectMenu
+             ;;
+     esac   
+             
+    
+}
+
+selectAll(){
+
+  tName=$(zenity --entry --title="tablename" --text="Enter table name")
+  if [[ $? -ne 0 ]]; then
+        zenity --info --text="Operation cancelled. Returning to Main Menu."
+         menuTable
+        return
+    fi
+  if [[ $tName = "" ]]
+  then
+  #echo "you entered an empty name! please try again."
+  zenity --info --text="you entered an empty name! please try again."
+  selectAll
+  fi #null 
+  
+  if [[ -e $tName ]]
+  then
+     result=$(cat ./$tName)
+     zenity --info --text="$result"
+     menuTable
+     
+   else
+       zenity --info --text="table you want to select is not found "
+       menuTable
+   fi
+      
+  
+}
+
+selectCol() {
+  #read -p "enter table's name to select from" tName
+   tName=$(zenity --entry --title="tablename" --text="Enter table name")
+   if [[ $? -ne 0 ]]; then
+        zenity --info --text="Operation cancelled. Returning to Main Menu."
+         menuTable
+        return
+    fi
+
+  if [[ $tName = "" ]]
+  then
+  #echo "you entered an empty name! please try again."
+  zenity --info --text="you entered an empty name! please try again."
+  selectCol
+  return
+  fi #null validation
+
+  if [[ -e $tName ]]
+  then
+  
+  #colCount=$(cat ./$tName | head -1 | grep -o "|" | wc -c  ) #counting the number of columns to limit the Args
+  #echo $colCount
+  
+        #read -p "-> enter the colum you want to select 
+      #-> type * to select all
+      #" argsss
+      argsss=$(zenity --entry --title="colname" --text="Enter colname name")
+      if [[ $? -ne 0 ]]; then
+        zenity --info --text="Operation cancelled. Returning to Main Menu."
+         menuTable
+        return
+    fi
+
+        if [[ $argsss == "all" ]]
+        then
+          cat ./$tName
+
+        else
+          checkCol=$(cut -d\| -f1 ./.$tName |tail -n+2 | grep -x $argsss)
+          #echo $checkCol
+          if [[ $checkCol == "" ]]
+          then
+            #echo "there us no such a column"
+            zenity --info --text="there us no such a column"
+            menuTable
+          else 
+           result=$(awk -F'|' 'NR==1 { for (l=1; l<=NF; l++) if ($l == "'$argsss'") col=l } NR>1 { print $col }' ./$tName) #displaying the choosen colunn
+           zenity --info --text="$result"
+           menuTable
+          fi
+          checkCol=""
+
+  #IFS=' ' read -a sArr <<<  $argsss
+  # declare -i c=0 #for counting each col type in meta data file
+  #   for lo in "${sArr[@]}"
+  #   do  
+  #   echo $lo
+  #   done
+  argsss=""
+  fi
+
+
+  else
+    #echo "there is no such a table! please try again."
+    zenity --info --text="there is no such a table! please try again."
+    menuTable
+  fi
+
+} #selection not done yetttt :" 
+
+selectWithCondition() {
+    sTname=$(zenity --entry --title="tablename" --text="Enter table name")
+    if [[ $? -ne 0 ]]; then
+        zenity --info --text="Operation cancelled. Returning to Main Menu."
+         menuTable
+        return
+    fi
+    first=$(head -1 ./$sTname) 2>>./.error.log
+
+    if [[ $sTname == "" ]]
+    then 
+        zenity --info --text="you typed an empty input, please try again"
+        selectWithCondition
+        return
+    elif [[ ! -e $sTname ]]
+    then 
+        zenity --info --text="the table's name you entered is not found!"
+        selectWithCondition
+        return
+    else
+        cName=$(zenity --entry --title="colename" --text="Enter col name")
+        if [[ $cName == "" ]]
+        then 
+            zenity --info --text="you didn't type anything, please try again"
+            selectWithCondition
+            return
+        fi
+
+        wCol=$(zenity --entry --title="colname" --text="enter the column you want to select with")
+        if [[ $? -ne 0 ]]; then
+        zenity --info --text="Operation cancelled. Returning to Main Menu."
+         menuTable
+        return
+    fi
+        checkColname=$(cut -d\| -f1 ./.$sTname |tail -n+2 | grep -x $wCol) 2>>./.error.log
+
+        if [[ $wCol == "" ]]
+        then 
+            zenity --info --text="you didn't type anything, please try again"
+            selectWithCondition
+            return
+        elif [[ $checkColname == "" ]]
+        then
+            zenity --info --text="the column you typed is not found in this table"
+            selectWithCondition
+            return
+        fi
+
+        wVal=$(zenity --entry --title="valname" --text="enter the value you want to select with")
+        if [[ $? -ne 0 ]]; then
+        zenity --info --text="Operation cancelled. Returning to Main Menu."
+         menuTable
+        return
+    fi
+        if [[ $wVal == "" ]]
+        then 
+            zenity --info --text="you didn't type anything, please try again"
+            selectWithCondition
+            return
+        fi
+
+        num=$(cat ./$sTname | awk -F'|' 'NR==1 { for (l=1; l<=NF; l++) if ($l == "'$wCol'") col=l } {  } END { print col }') 2>>./.error.log
+        checkColnamedis=$(cut -d\| -f1 ./.$sTname |tail -n+2 | grep -x $wCol) 2>>./.error.log
+
+        if [[ $cName == 'all' ]]
+        then
+            cat ./$sTname | awk -F'|' ' BEGIN { print "'$first'"}  $"'$num'" == "'$wVal'"  { print $0 }' 2>>./.error.log
+        elif [[ $checkColnamedis == "" ]]
+        then
+            zenity --info --text="the column you typed is not found in this table"
+            selectWithCondition
+            return
+        else
+            result=$(cat ./$sTname | awk -F'|' 'BEGIN { print "'$first'"} $"'$num'" == "'$wVal'"  { print $0 }' | awk -F'|' 'NR==1 { for (l=1; l<=NF; l++) if ($l == "'$cName'") col=l } { print $col }') 2>>./.error.log
+            zenity --info --text="$result"
+        fi
+    fi
+}
+
+checkColname=""
+checkColnamedis=""
+#to select any colomns with any wheres
+
+
+Mainmenu
+   
+   
+
